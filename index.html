@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Зміна">
+<meta name="theme-color" content="#F2F2F7">
+<title>Зміна — контроль перерв</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+  :root {
+    --bg: #F2F2F7;
+    --card: #FFFFFF;
+    --text: #1C1C1E;
+    --text2: #8E8E93;
+    --sep: rgba(0,0,0,0.1);
+    --green: #34C759;
+    --orange: #FF9500;
+    --blue: #007AFF;
+    --red: #FF3B30;
+    --purple: #7F77DD;
+    --safe-top: env(safe-area-inset-top, 44px);
+    --safe-bottom: env(safe-area-inset-bottom, 20px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1C1C1E;
+      --card: #2C2C2E;
+      --text: #FFFFFF;
+      --text2: #8E8E93;
+      --sep: rgba(255,255,255,0.1);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--bg);
+    padding: 12px 20px 10px;
+    border-bottom: 0.5px solid var(--sep);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .header-row { display: flex; justify-content: space-between; align-items: flex-start; }
+  .header-title { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; }
+  .badge-count {
+    display: inline-block; background: var(--red); color: #fff;
+    border-radius: 10px; font-size: 11px; font-weight: 700;
+    padding: 2px 8px; margin-left: 6px; vertical-align: middle;
+  }
+  .clock-display { font-size: 14px; color: var(--text2); font-weight: 500; margin-top: 2px; }
+  .header-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .header-sub.active-break { color: var(--orange); }
+  .header-sub.ended { color: var(--red); }
+  .progress-wrap { height: 4px; background: var(--sep); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+  .progress-fill { height: 100%; background: var(--blue); border-radius: 2px; transition: width 60s linear; }
+
+  /* STATS */
+  .section-label {
+    font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--text2); padding: 16px 20px 8px;
+  }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 0 16px; }
+  .stat-card {
+    background: var(--card); border-radius: 14px;
+    padding: 14px 10px; text-align: center;
+  }
+  .stat-icon { font-size: 22px; display: block; margin-bottom: 5px; }
+  .stat-value { font-size: 26px; font-weight: 700; display: block; letter-spacing: -1px; }
+  .stat-label { font-size: 10px; color: var(--text2); margin-top: 3px; display: block; line-height: 1.3; }
+
+  /* TIMER */
+  .timer-block {
+    margin: 12px 16px 0;
+    background: #FFF5E6;
+    border: 1.5px solid var(--orange);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  @media (prefers-color-scheme: dark) {
+    .timer-block { background: #2D1F00; }
+  }
+  .timer-label { font-size: 13px; color: var(--orange); font-weight: 600; }
+  .timer-val { font-size: 28px; font-weight: 700; color: var(--orange); font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .timer-status-live { font-size: 12px; font-weight: 600; margin-top: 4px; }
+  .timer-icon { font-size: 32px; }
+
+  /* BUTTONS */
+  .btn-area { padding: 0 16px; }
+  .main-btn {
+    width: 100%; border: none; border-radius: 16px;
+    padding: 20px; font-size: 18px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    transition: transform 0.1s, opacity 0.15s;
+    letter-spacing: -0.2px;
+  }
+  .main-btn:active { transform: scale(0.97); opacity: 0.85; }
+  .btn-orange { background: var(--orange); color: #fff; }
+  .btn-blue { background: var(--blue); color: #fff; }
+  .btn-gray { background: #E5E5EA; color: #8E8E93; cursor: not-allowed; }
+  @media (prefers-color-scheme: dark) { .btn-gray { background: #3A3A3C; } }
+  .btn-icon { font-size: 22px; }
+
+  .end-shift-btn {
+    width: 100%; border: none; border-radius: 16px;
+    padding: 16px; font-size: 16px; font-weight: 600;
+    font-family: inherit; cursor: pointer; background: var(--red); color: #fff;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform 0.1s, opacity 0.15s;
+  }
+  .end-shift-btn:active { transform: scale(0.97); opacity: 0.85; }
+  .btn-row { padding: 8px 16px 0; }
+
+  /* BREAKS LIST */
+  .breaks-list { padding: 0 16px; }
+  .break-row {
+    background: var(--card); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .break-left { display: flex; align-items: center; gap: 10px; }
+  .break-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .break-num { font-size: 14px; font-weight: 600; }
+  .break-time { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .break-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .break-dur { font-size: 13px; font-weight: 600; }
+  .status-pill {
+    font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 9px; white-space: nowrap;
+  }
+  .pill-ok { background: #E8F9EE; color: #1A7A38; }
+  .pill-late { background: #FFF3E0; color: #B05F00; }
+  .pill-lunch { background: #E6F1FB; color: #185FA5; }
+  .pill-lunch-late { background: #F0EBFF; color: #4A2FA0; }
+  .pill-fine { background: #FFEBEA; color: #A32D2D; }
+  @media (prefers-color-scheme: dark) {
+    .pill-ok { background: #0D3A1C; color: #5DCAA5; }
+    .pill-late { background: #3D2200; color: #FF9500; }
+    .pill-lunch { background: #00204D; color: #85B7EB; }
+    .pill-lunch-late { background: #1E0E40; color: #AFA9EC; }
+    .pill-fine { background: #3D0000; color: #F09595; }
+  }
+
+  /* REPORT SHEET */
+  .sheet-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 100;
+    align-items: flex-end;
+  }
+  .sheet-overlay.show { display: flex; }
+  .sheet {
+    background: var(--bg); border-radius: 20px 20px 0 0;
+    width: 100%; padding: 20px 20px calc(20px + var(--safe-bottom));
+    max-height: 90vh; overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet-handle { width: 36px; height: 4px; background: #C7C7CC; border-radius: 2px; margin: 0 auto 18px; }
+  .sheet-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .sheet-date { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
+  .report-row {
+    background: var(--card); border-radius: 12px;
+    padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+  .report-lbl { font-size: 14px; }
+  .report-val { font-size: 14px; font-weight: 600; color: var(--blue); }
+  .report-val.red { color: var(--red); }
+  .report-sub { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text2); margin: 16px 0 8px; }
+  .report-break-card {
+    background: var(--card); border-radius: 12px; padding: 12px 14px; margin-bottom: 7px;
+  }
+  .rbc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .rbc-n { font-size: 13px; font-weight: 600; }
+  .rbc-t { font-size: 11px; color: var(--text2); }
+  .rbc-bot { display: flex; justify-content: space-between; align-items: center; }
+  .rbc-d { font-size: 14px; font-weight: 700; }
+  .legend-card { background: var(--card); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
+  .legend-lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text2); margin-bottom: 10px; }
+  .legend-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+  .legend-range { font-size: 13px; }
+  .sheet-close-btn {
+    width: 100%; background: var(--blue); color: #fff; border: none;
+    border-radius: 14px; padding: 16px; font-size: 17px; font-weight: 600;
+    font-family: inherit; cursor: pointer; margin-top: 16px;
+  }
+  .sheet-close-btn:active { opacity: 0.8; }
+
+  /* INSTALL HINT */
+  .install-hint {
+    margin: 12px 16px 0;
+    background: var(--card); border-radius: 14px;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 13px; color: var(--text2);
+  }
+  .install-hint-icon { font-size: 22px; flex-shrink: 0; }
+  .install-hint b { color: var(--text); }
+  .install-hint-close {
+    margin-left: auto; background: none; border: none; font-size: 18px;
+    color: var(--text2); cursor: pointer; padding: 0 0 0 8px; flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <div>
+      <div class="header-title">Зміна <span id="hd-badge"></span></div>
+      <div class="clock-display" id="hd-clock">--:--</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:12px;color:var(--text2);">08:00 – 22:00</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px;" id="hd-progress-label">0% зміни</div>
+    </div>
+  </div>
+  <div id="hd-sub" class="header-sub">Зміна активна</div>
+  <div class="progress-wrap"><div class="progress-fill" id="hd-progress" style="width:0%"></div></div>
+</div>
+
+<div id="install-hint" class="install-hint" style="display:none;">
+  <span class="install-hint-icon">📲</span>
+  <div><b>Встанови як додаток:</b> натисни <b>Поділитись</b> → «На екран «Домівка»»</div>
+  <button class="install-hint-close" onclick="dismissHint()">✕</button>
+</div>
+
+<div class="section-label">Статистика</div>
+<div class="stat-grid">
+  <div class="stat-card">
+    <span class="stat-icon">☕</span>
+    <span class="stat-value" id="st-today">0</span>
+    <span class="stat-label">Виходи сьогодні</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">📅</span>
+    <span class="stat-value" id="st-prev">–</span>
+    <span class="stat-label">Минула зміна</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">📆</span>
+    <span class="stat-value" id="st-days">0</span>
+    <span class="stat-label">Днів у місяці</span>
+  </div>
+</div>
+
+<div id="timer-block" style="display:none;">
+  <div class="timer-block">
+    <div>
+      <div class="timer-label">На перерві зараз</div>
+      <div class="timer-val" id="timer-val">00:00</div>
+      <div class="timer-status-live" id="timer-status"></div>
+    </div>
+    <div class="timer-icon">☕</div>
+  </div>
+</div>
+
+<div class="section-label">Дія</div>
+<div class="btn-area" id="action-area"></div>
+
+<div class="btn-row" id="end-shift-row">
+  <button class="end-shift-btn" onclick="endShift()">🏁 Зміна закінчена</button>
+</div>
+
+<div id="breaks-section">
+  <div class="section-label" id="breaks-label" style="display:none;">Виходи сьогодні</div>
+  <div class="breaks-list" id="breaks-list"></div>
+</div>
+
+<div style="height:40px;"></div>
+
+<!-- REPORT SHEET -->
+<div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Звіт за зміну</div>
+    <div class="sheet-date" id="sh-date"></div>
+
+    <div class="report-row"><span class="report-lbl">Виходів на перерву</span><span class="report-val" id="sh-count">0</span></div>
+    <div class="report-row"><span class="report-lbl">Загальний час перерв</span><span class="report-val" id="sh-total">0 хв</span></div>
+    <div class="report-row"><span class="report-lbl">Середня тривалість</span><span class="report-val" id="sh-avg">0 хв</span></div>
+    <div class="report-row"><span class="report-lbl">Затримок</span><span class="report-val" id="sh-late">0</span></div>
+    <div class="report-row"><span class="report-lbl">Обідів</span><span class="report-val" id="sh-lunch">0</span></div>
+    <div class="report-row"><span class="report-lbl">Штрафів</span><span class="report-val red" id="sh-fines">0</span></div>
+
+    <div class="report-sub">Детально</div>
+    <div id="sh-breaks"></div>
+
+    <div class="report-sub">Легенда</div>
+    <div class="legend-card">
+      <div class="legend-row"><span class="legend-range">до 10 хв</span><span class="status-pill pill-ok">Норма</span></div>
+      <div class="legend-row"><span class="legend-range">11–15 хв</span><span class="status-pill pill-late">Затримка</span></div>
+      <div class="legend-row"><span class="legend-range">16–20 хв</span><span class="status-pill pill-lunch">Обід</span></div>
+      <div class="legend-row"><span class="legend-range">21–25 хв</span><span class="status-pill pill-lunch-late">Обід + затримка</span></div>
+      <div class="legend-row"><span class="legend-range">більше 25 хв</span><span class="status-pill pill-fine">Штраф</span></div>
+    </div>
+
+    <button class="sheet-close-btn" onclick="closeSheet()">Закрити</button>
+  </div>
+</div>
+
+<script>
+const KEY='break_tracker_pwa_v1';
+const SHIFT_END_H=22, SHIFT_START_H=8;
+
+let state=loadState(), timerInt=null, clockInt=null, autoFired=false;
+
+function today(){const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;}
+
+function loadState(){
+  try{
+    const r=localStorage.getItem(KEY);
+    if(r){const s=JSON.parse(r);if(s.date===today())return s;}
+  }catch(e){}
+  return freshState();
+}
+
+function freshState(){
+  let prev=0,days=0;
+  try{const r=localStorage.getItem(KEY+'_prev');if(r)prev=JSON.parse(r).c||0;}catch(e){}
+  try{const r=localStorage.getItem(KEY+'_days');if(r)days=JSON.parse(r).c||0;}catch(e){}
+  return{date:today(),breaks:[],onBreak:false,breakStart:null,shiftEnded:false,prev,days};
+}
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+
+function classify(ms){
+  const m=ms/60000;
+  if(m<=10)return{label:'Норма',cls:'pill-ok',color:'#34C759',dot:'#34C759'};
+  if(m<=15)return{label:'Затримка',cls:'pill-late',color:'#FF9500',dot:'#FF9500'};
+  if(m<=20)return{label:'Обід',cls:'pill-lunch',color:'#007AFF',dot:'#007AFF'};
+  if(m<=25)return{label:'Обід + затримка',cls:'pill-lunch-late',color:'#7F77DD',dot:'#7F77DD'};
+  return{label:'Штраф',cls:'pill-fine',color:'#FF3B30',dot:'#FF3B30'};
+}
+
+function ft(iso){const d=new Date(iso);return d.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});}
+function fd(ms){const m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000);return m>0?`${m} хв ${s}с`:`${s}с`;}
+function fm(ms){return Math.round(ms/60000)+' хв';}
+
+function startBreak(){
+  if(state.onBreak||state.shiftEnded)return;
+  state.onBreak=true;state.breakStart=new Date().toISOString();save();render();startTimer();
+}
+function endBreak(){
+  if(!state.onBreak||state.shiftEnded)return;
+  const s=new Date(state.breakStart),e=new Date();
+  state.breaks.push({s:state.breakStart,e:e.toISOString(),d:e-s});
+  state.onBreak=false;state.breakStart=null;save();stopTimer();render();
+}
+function endShift(){
+  if(state.shiftEnded)return;
+  if(state.onBreak)endBreak();
+  state.shiftEnded=true;
+  try{
+    localStorage.setItem(KEY+'_prev',JSON.stringify({c:state.breaks.length}));
+    let d=0;try{const r=localStorage.getItem(KEY+'_days');if(r)d=JSON.parse(r).c||0;}catch(e){}
+    localStorage.setItem(KEY+'_days',JSON.stringify({c:d+1}));
+  }catch(e){}
+  save();stopTimer();render();openSheet();
+}
+
+function startTimer(){stopTimer();timerInt=setInterval(tickTimer,1000);tickTimer();}
+function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}}
+
+function tickTimer(){
+  if(!state.onBreak||!state.breakStart)return;
+  const ms=new Date()-new Date(state.breakStart);
+  const m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000);
+  document.getElementById('timer-val').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const info=classify(ms);
+  const el=document.getElementById('timer-status');
+  el.textContent=info.label;el.style.color=info.dot;
+}
+
+function updateClock(){
+  const now=new Date();
+  document.getElementById('hd-clock').textContent=now.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+  const h=now.getHours(),m=now.getMinutes();
+  const total=(SHIFT_END_H-SHIFT_START_H)*60;
+  const elapsed=Math.max(0,(h-SHIFT_START_H)*60+m);
+  const pct=Math.min(100,Math.round(elapsed/total*100));
+  document.getElementById('hd-progress').style.width=pct+'%';
+  document.getElementById('hd-progress-label').textContent=pct+'% зміни';
+  if(!state.shiftEnded&&!autoFired&&h>=SHIFT_END_H){autoFired=true;endShift();}
+}
+
+function render(){
+  document.getElementById('st-today').textContent=state.breaks.length;
+  document.getElementById('st-prev').textContent=state.prev>0?state.prev:'–';
+  document.getElementById('st-days').textContent=state.days+(state.shiftEnded?1:0);
+
+  const sub=document.getElementById('hd-sub');
+  sub.className='header-sub';
+  if(state.shiftEnded){sub.textContent='Зміна завершена';sub.classList.add('ended');}
+  else if(state.onBreak){sub.textContent='На перерві';sub.classList.add('active-break');}
+  else sub.textContent='Зміна активна';
+
+  const bdg=document.getElementById('hd-badge');
+  bdg.innerHTML=state.breaks.length>0?`<span class="badge-count">${state.breaks.length}</span>`:'';
+
+  document.getElementById('timer-block').style.display=state.onBreak&&!state.shiftEnded?'block':'none';
+
+  const aa=document.getElementById('action-area');
+  const er=document.getElementById('end-shift-row');
+  if(state.shiftEnded){
+    aa.innerHTML=`<button class="main-btn btn-gray" disabled>✅ Зміна завершена</button>`;
+    er.style.display='none';
+  } else if(state.onBreak){
+    aa.innerHTML=`<button class="main-btn btn-blue" onclick="endBreak()"><span class="btn-icon">🚶</span>Повернувся з перерви</button>`;
+  } else {
+    aa.innerHTML=`<button class="main-btn btn-orange" onclick="startBreak()"><span class="btn-icon">☕</span>Вийшов на перерву</button>`;
+  }
+
+  const list=document.getElementById('breaks-list');
+  const lbl=document.getElementById('breaks-label');
+  list.innerHTML='';
+  if(state.breaks.length>0){
+    lbl.style.display='block';
+    state.breaks.forEach((b,i)=>{
+      const info=classify(b.d);
+      const row=document.createElement('div');row.className='break-row';
+      row.innerHTML=`
+        <div class="break-left">
+          <div class="break-dot" style="background:${info.dot};"></div>
+          <div>
+            <div class="break-num">Вихід ${i+1}</div>
+            <div class="break-time">${ft(b.s)} → ${ft(b.e)}</div>
+          </div>
+        </div>
+        <div class="break-right">
+          <span class="break-dur" style="color:${info.dot};">${fd(b.d)}</span>
+          <span class="status-pill ${info.cls}">${info.label}</span>
+        </div>`;
+      list.appendChild(row);
+    });
+  } else lbl.style.display='none';
+}
+
+function openSheet(){
+  const d=new Date();
+  document.getElementById('sh-date').textContent=d.toLocaleDateString('uk-UA',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('sh-count').textContent=state.breaks.length;
+  let total=0;state.breaks.forEach(b=>{total+=b.d;});
+  document.getElementById('sh-total').textContent=total>0?fm(total):'0 хв';
+  const avg=state.breaks.length>0?Math.round(total/state.breaks.length/60000):0;
+  document.getElementById('sh-avg').textContent=avg+' хв';
+  let lates=0,lunches=0,fines=0;
+  const el=document.getElementById('sh-breaks');el.innerHTML='';
+  state.breaks.forEach((b,i)=>{
+    const info=classify(b.d);
+    if(info.cls==='pill-late')lates++;
+    if(info.cls==='pill-lunch')lunches++;
+    if(info.cls==='pill-lunch-late'){lates++;lunches++;}
+    if(info.cls==='pill-fine')fines++;
+    const c=document.createElement('div');c.className='report-break-card';
+    c.innerHTML=`
+      <div class="rbc-top"><span class="rbc-n">Вихід ${i+1}</span><span class="rbc-t">${ft(b.s)} → ${ft(b.e)}</span></div>
+      <div class="rbc-bot"><span class="rbc-d" style="color:${info.dot};">${fd(b.d)}</span><span class="status-pill ${info.cls}">${info.label}</span></div>`;
+    el.appendChild(c);
+  });
+  if(state.breaks.length===0)el.innerHTML='<div style="text-align:center;color:var(--text2);padding:14px 0;font-size:14px;">Виходів не було</div>';
+  document.getElementById('sh-late').textContent=lates;
+  document.getElementById('sh-lunch').textContent=lunches;
+  document.getElementById('sh-fines').textContent=fines;
+  document.getElementById('sheet-overlay').classList.add('show');
+}
+
+function closeSheet(e){
+  if(!e||e.target===document.getElementById('sheet-overlay'))
+    document.getElementById('sheet-overlay').classList.remove('show');
+}
+
+function dismissHint(){
+  document.getElementById('install-hint').style.display='none';
+  try{localStorage.setItem('hint_dismissed','1');}catch(e){}
+}
+
+function checkInstallHint(){
+  const isStandalone=window.navigator.standalone||window.matchMedia('(display-mode: standalone)').matches;
+  const dismissed=localStorage.getItem('hint_dismissed');
+  if(!isStandalone&&!dismissed){document.getElementById('install-hint').style.display='flex';}
+}
+
+window.startBreak=startBreak;window.endBreak=endBreak;window.endShift=endShift;
+window.openSheet=openSheet;window.closeSheet=closeSheet;window.dismissHint=dismissHint;
+
+render();
+if(state.onBreak)startTimer();
+updateClock();
+clockInt=setInterval(updateClock,15000);
+checkInstallHint();
+if(!state.shiftEnded&&new Date().getHours()>=SHIFT_END_H){autoFired=true;setTimeout(endShift,500);}
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js");}</script>
+</body>
+</html>
