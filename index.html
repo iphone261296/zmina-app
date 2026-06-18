@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Зміна">
+<meta name="theme-color" content="#000">
+<title>Зміна</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+/* ─── RESET ─── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#F2F2F7;--card:#fff;--card2:#E5E5EA;--text:#1C1C1E;--text2:#8E8E93;--text3:#C7C7CC;
+  --sep:rgba(0,0,0,0.1);--blue:#007AFF;--green:#34C759;--orange:#FF9500;
+  --red:#FF3B30;--purple:#5E5CE6;--teal:#32ADE6;--pink:#FF2D55;
+  --st:env(safe-area-inset-top,44px);--sb:env(safe-area-inset-bottom,20px);
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#000;--card:#1C1C1E;--card2:#2C2C2E;--text:#fff;--text2:#8E8E93;--text3:#48484A;--sep:rgba(255,255,255,0.1);}
+  .spill-ok{background:#0D3A1C!important;color:#5DCAA5!important;}
+  .spill-late{background:#3D2200!important;color:#FF9500!important;}
+  .spill-lunch{background:#00204D!important;color:#85B7EB!important;}
+  .spill-ll{background:#1E0E40!important;color:#AFA9EC!important;}
+  .spill-fine{background:#3D0000!important;color:#F09595!important;}
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;background:#000;}
+
+/* ─── SCREENS ─── */
+.scr{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+.scr.off{display:none;}
+
+/* ─── SPLASH ─── */
+#splash{background:#000;align-items:center;justify-content:center;z-index:999;}
+.sp-wrap{display:flex;flex-direction:column;align-items:center;gap:18px;}
+.sp-logo{
+  width:110px;height:110px;border-radius:26px;
+  background:linear-gradient(145deg,#FF9500 0%,#FF6B00 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:56px;
+  box-shadow:0 0 0 0 rgba(255,149,0,.6);
+  animation:logoPop .55s cubic-bezier(.34,1.56,.64,1) .2s both, logoPulse 2.2s ease-in-out 1s infinite;
+}
+@keyframes logoPop{from{opacity:0;transform:scale(.4);}to{opacity:1;transform:scale(1);}}
+@keyframes logoPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,149,0,.5);}50%{box-shadow:0 0 0 22px rgba(255,149,0,0);}}
+.sp-name{font-size:36px;font-weight:700;color:#fff;letter-spacing:-.5px;opacity:0;animation:fadeUp .4s ease .6s both;}
+.sp-sub{font-size:14px;color:rgba(255,255,255,.45);opacity:0;animation:fadeUp .4s ease .75s both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.sp-bar-wrap{width:140px;height:2px;background:rgba(255,255,255,.12);border-radius:1px;overflow:hidden;opacity:0;animation:fadeUp .3s ease .9s both;}
+.sp-bar{height:100%;width:0;background:linear-gradient(90deg,#FF9500,#FFD600);border-radius:1px;}
+
+/* ─── LOGIN ─── */
+#login{background:#000;align-items:center;justify-content:center;padding:40px 28px;}
+.login-box{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:20px;}
+.login-logo{width:72px;height:72px;border-radius:18px;background:linear-gradient(145deg,#FF9500,#FF6B00);display:flex;align-items:center;justify-content:center;font-size:36px;}
+.login-title{font-size:26px;font-weight:700;color:#fff;text-align:center;}
+.login-sub{font-size:14px;color:rgba(255,255,255,.5);text-align:center;margin-top:-12px;}
+.inp{
+  width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;padding:16px;font-size:16px;color:#fff;font-family:inherit;outline:none;
+}
+.inp::placeholder{color:rgba(255,255,255,.3);}
+.inp:focus{border-color:#FF9500;}
+.login-btn{
+  width:100%;background:#FF9500;color:#fff;border:none;border-radius:14px;
+  padding:18px;font-size:17px;font-weight:600;font-family:inherit;cursor:pointer;
+  transition:transform .1s,opacity .15s;
+}
+.login-btn:active{transform:scale(.98);opacity:.85;}
+.login-skip{font-size:14px;color:rgba(255,255,255,.4);cursor:pointer;margin-top:-8px;}
+.login-skip:active{opacity:.6;}
+
+/* ─── MAIN ─── */
+#main{overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:var(--st);}
+
+/* Topbar */
+.topbar{
+  position:sticky;top:0;z-index:20;background:var(--bg);
+  padding:10px 20px 10px;border-bottom:.5px solid var(--sep);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.tb-left{}
+.tb-title{font-size:22px;font-weight:700;letter-spacing:-.3px;}
+.tb-sub{font-size:12px;color:var(--text2);margin-top:1px;}
+.tb-right{display:flex;gap:10px;}
+.ib{
+  width:36px;height:36px;border-radius:50%;background:var(--card);
+  border:.5px solid var(--sep);display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;transition:transform .1s;-webkit-user-select:none;
+}
+.ib:active{transform:scale(.9);}
+.progress-wrap{height:3px;background:var(--sep);}
+.progress-fill{height:100%;background:var(--orange);transition:width 60s linear;}
+
+/* ─── ONBOARDING CAROUSEL ─── */
+.carousel-wrap{margin:16px 0 0;overflow:hidden;}
+.carousel-track{display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1);will-change:transform;}
+.slide{
+  min-width:calc(100vw - 32px);margin:0 6px;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  border-radius:20px;padding:24px;color:#fff;
+  display:flex;flex-direction:column;justify-content:space-between;
+  min-height:160px;position:relative;overflow:hidden;
+}
+.slide:nth-child(2){background:linear-gradient(135deg,var(--orange),var(--pink));}
+.slide:nth-child(3){background:linear-gradient(135deg,var(--green),var(--teal));}
+.slide:nth-child(4){background:linear-gradient(135deg,#5E5CE6,#BF5AF2);}
+.slide-icon{font-size:36px;margin-bottom:10px;}
+.slide-title{font-size:18px;font-weight:700;margin-bottom:6px;}
+.slide-body{font-size:13px;opacity:.85;line-height:1.5;}
+.slide-num{font-size:11px;opacity:.6;margin-top:10px;align-self:flex-end;}
+.carousel-dots{display:flex;justify-content:center;gap:6px;margin:10px 0 4px;}
+.dot{width:6px;height:6px;border-radius:3px;background:var(--text3);transition:all .25s;}
+.dot.on{width:18px;background:var(--orange);}
+.carousel-hint{text-align:center;font-size:11px;color:var(--text2);margin-bottom:4px;}
+
+/* ─── PROJECTS ─── */
+.section-row{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 8px;}
+.sec-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);}
+.add-btn{
+  width:30px;height:30px;border-radius:15px;background:var(--blue);color:#fff;
+  border:none;font-size:20px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:transform .1s;
+}
+.add-btn:active{transform:scale(.9);}
+.projects-scroll{display:flex;gap:12px;padding:0 16px 4px;overflow-x:auto;scrollbar-width:none;}
+.projects-scroll::-webkit-scrollbar{display:none;}
+.proj-card{
+  min-width:160px;border-radius:18px;padding:16px;cursor:pointer;
+  position:relative;transition:transform .15s;flex-shrink:0;
+  box-shadow:0 4px 20px rgba(0,0,0,.1);
+}
+.proj-card:active{transform:scale(.96);}
+.proj-card.active-proj{outline:2.5px solid var(--blue);}
+.proj-emoji{font-size:28px;margin-bottom:8px;display:block;}
+.proj-name{font-size:14px;font-weight:600;color:#fff;}
+.proj-sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:3px;}
+.proj-badge{
+  position:absolute;top:10px;right:10px;background:rgba(255,255,255,.25);
+  color:#fff;border-radius:8px;font-size:10px;font-weight:700;padding:2px 6px;
+}
+
+/* ─── BREAK SECTION ─── */
+.break-section{padding:0 16px;margin-top:4px;}
+.breaks-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.breaks-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);}
+.copy-btn{
+  background:var(--card);border:.5px solid var(--sep);border-radius:10px;
+  padding:5px 11px;font-size:12px;font-weight:600;color:var(--blue);
+  border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;
+}
+.copy-btn:active{opacity:.6;}
+.copy-btn.ok{color:var(--green);}
+.break-row{
+  background:var(--card);border-radius:12px;padding:10px 14px;margin-bottom:7px;
+  display:flex;align-items:center;gap:8px;
+}
+.bdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.bn{font-size:13px;font-weight:600;min-width:56px;}
+.bt{font-size:12px;color:var(--text2);flex:1;}
+.bd{font-size:12px;font-weight:600;margin-right:4px;}
+.spill{font-size:10px;font-weight:700;padding:3px 7px;border-radius:8px;white-space:nowrap;flex-shrink:0;}
+.spill-ok{background:#E8F9EE;color:#1A7A38;}
+.spill-late{background:#FFF3E0;color:#B05F00;}
+.spill-lunch{background:#E6F1FB;color:#185FA5;}
+.spill-ll{background:#F0EBFF;color:#4A2FA0;}
+.spill-fine{background:#FFEBEA;color:#A32D2D;}
+.no-breaks{background:var(--card);border-radius:12px;padding:18px;text-align:center;font-size:13px;color:var(--text2);}
+
+/* Metrics */
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;margin-top:4px;}
+.mc{background:var(--card);border-radius:16px;padding:14px 13px;position:relative;}
+.mc-icon{font-size:22px;margin-bottom:6px;display:block;}
+.mc-val{font-size:22px;font-weight:700;letter-spacing:-.5px;}
+.mc-unit{font-size:12px;font-weight:400;color:var(--text2);}
+.mc-lbl{font-size:11px;color:var(--text2);margin-top:3px;display:block;}
+.mc-trend{font-size:10px;font-weight:600;margin-top:3px;display:block;}
+.tup{color:var(--red);}
+.tdn{color:var(--green);}
+.mc-edit{
+  position:absolute;top:8px;right:8px;font-size:10px;color:var(--text3);
+  cursor:pointer;background:var(--card2);border-radius:6px;padding:2px 5px;
+}
+
+/* Active timer */
+.timer-card{
+  margin:10px 16px 0;background:#FFF5E6;border:1.5px solid var(--orange);
+  border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;
+}
+@media(prefers-color-scheme:dark){.timer-card{background:#2D1F00;}}
+.tc-lbl{font-size:12px;color:var(--orange);font-weight:600;}
+.tc-val{font-size:30px;font-weight:700;color:var(--orange);font-variant-numeric:tabular-nums;margin-top:2px;}
+.tc-st{font-size:12px;font-weight:600;margin-top:3px;}
+.tc-ico{font-size:34px;}
+
+/* Action */
+.action-area{padding:12px 16px 0;}
+.mbtn{
+  width:100%;border:none;border-radius:16px;padding:19px;font-size:17px;font-weight:600;
+  font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:transform .1s,opacity .15s;
+}
+.mbtn:active{transform:scale(.97);opacity:.85;}
+.btn-or{background:var(--orange);color:#fff;}
+.btn-bl{background:var(--blue);color:#fff;}
+.btn-gr{background:var(--card2);color:var(--text2);cursor:not-allowed;}
+.btn-row2{display:flex;gap:10px;padding:8px 16px 0;}
+.sbtn{
+  flex:1;border:none;border-radius:14px;padding:15px;font-size:14px;font-weight:600;
+  font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:transform .1s,opacity .15s;
+}
+.sbtn:active{transform:scale(.97);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-set{background:var(--card);color:var(--text);border:.5px solid var(--sep);}
+
+.spacer{height:50px;}
+
+/* ─── SETTINGS SCREEN ─── */
+#settings{overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:var(--st);}
+.snav{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 20px 10px;border-bottom:.5px solid var(--sep);
+  position:sticky;top:0;background:var(--bg);z-index:10;
+}
+.back{font-size:16px;font-weight:500;color:var(--blue);background:none;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px;}
+.snav-title{font-size:17px;font-weight:600;flex:1;text-align:center;}
+.slbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);padding:18px 20px 8px;}
+.scard{margin:0 16px 10px;background:var(--card);border-radius:16px;overflow:hidden;}
+.srow{
+  display:flex;align-items:center;gap:12px;padding:13px 16px;
+  border-bottom:.5px solid var(--sep);cursor:pointer;transition:background .15s;
+}
+.srow:last-child{border-bottom:none;}
+.srow:active{background:var(--card2);}
+.sri{font-size:22px;width:30px;text-align:center;flex-shrink:0;}
+.srt{flex:1;}
+.srt-t{font-size:15px;font-weight:500;}
+.srt-s{font-size:12px;color:var(--text2);margin-top:1px;}
+.srr{display:flex;align-items:center;gap:8px;color:var(--text3);font-size:14px;}
+.tog{
+  width:51px;height:31px;border-radius:15.5px;background:#E5E5EA;
+  position:relative;transition:background .25s;cursor:pointer;flex-shrink:0;border:none;
+}
+@media(prefers-color-scheme:dark){.tog{background:#39393D;}}
+.tog.on{background:var(--green);}
+.tog-thumb{
+  position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;
+  background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);
+  transition:transform .25s cubic-bezier(.34,1.3,.64,1);
+}
+.tog.on .tog-thumb{transform:translateX(20px);}
+
+/* ─── SHEET (bottom sheet) ─── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;}
+.overlay.show{display:flex;}
+.sheet{
+  background:var(--bg);border-radius:20px 20px 0 0;width:100%;
+  padding:20px 20px calc(20px + var(--sb));
+  max-height:92vh;overflow-y:auto;
+  animation:slideUp .3s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.sh-handle{width:36px;height:4px;background:var(--sep);border-radius:2px;margin:0 auto 18px;}
+.sh-title{font-size:22px;font-weight:700;margin-bottom:4px;}
+.sh-sub{font-size:13px;color:var(--text2);margin-bottom:16px;}
+.rpt-row{background:var(--card);border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.rl{font-size:14px;}
+.rv{font-size:14px;font-weight:600;color:var(--blue);}
+.rv.red{color:var(--red);}
+
+/* Industry picker */
+.ind-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.ind-card{
+  background:var(--card);border-radius:14px;padding:16px 12px;text-align:center;
+  border:2px solid transparent;cursor:pointer;transition:all .2s;
+}
+.ind-card:active{transform:scale(.97);}
+.ind-card.sel{border-color:var(--blue);background:rgba(0,122,255,.06);}
+.ind-emoji{font-size:30px;display:block;margin-bottom:6px;}
+.ind-name{font-size:13px;font-weight:600;}
+.ind-desc{font-size:10px;color:var(--text2);margin-top:2px;line-height:1.3;}
+
+/* Metric picker */
+.mpick-list{display:flex;flex-direction:column;gap:0;}
+.mpick-row{
+  display:flex;align-items:center;gap:12px;padding:12px 0;
+  border-bottom:.5px solid var(--sep);cursor:pointer;
+}
+.mpick-row:last-child{border-bottom:none;}
+.mpick-icon{font-size:20px;width:32px;text-align:center;}
+.mpick-text{flex:1;}
+.mpick-name{font-size:14px;font-weight:500;}
+.mpick-desc{font-size:11px;color:var(--text2);}
+.mpick-check{font-size:20px;color:var(--blue);width:24px;text-align:right;}
+
+/* Drag reorder */
+.drag-list{display:flex;flex-direction:column;gap:8px;}
+.drag-item{
+  background:var(--card);border-radius:12px;padding:12px 14px;
+  display:flex;align-items:center;gap:12px;
+  cursor:grab;touch-action:none;transition:box-shadow .2s;
+}
+.drag-item.dragging{opacity:.5;box-shadow:0 8px 30px rgba(0,0,0,.2);}
+.drag-handle{font-size:18px;color:var(--text3);cursor:grab;}
+
+/* profile */
+.avatar{
+  width:80px;height:80px;border-radius:40px;background:linear-gradient(135deg,var(--orange),var(--pink));
+  display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 12px;
+}
+.prof-name{font-size:20px;font-weight:700;text-align:center;margin-bottom:4px;}
+.prof-role{font-size:14px;color:var(--text2);text-align:center;}
+
+.lang-row{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;}
+.lang-pill{
+  background:var(--card2);border-radius:10px;padding:8px 16px;
+  font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;border:2px solid transparent;
+}
+.lang-pill.on{border-color:var(--blue);background:rgba(0,122,255,.08);color:var(--blue);}
+
+.sh-btn{
+  width:100%;background:var(--blue);color:#fff;border:none;border-radius:14px;
+  padding:16px;font-size:17px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:16px;
+}
+.sh-btn:active{opacity:.8;}
+.sh-btn.red{background:var(--red);}
+.sh-btn.grn{background:var(--green);}
+
+.time-row{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:.5px solid var(--sep);}
+.time-row:last-child{border-bottom:none;}
+.time-lbl{font-size:15px;flex:1;}
+.time-inp{background:var(--card2);border:none;border-radius:8px;padding:6px 10px;font-size:15px;font-weight:600;color:var(--text);font-family:inherit;width:82px;text-align:center;}
+</style>
+</head>
+<body>
+
+<!-- ═══ SPLASH ═══ -->
+<div class="scr" id="splash" style="background:#000;align-items:center;justify-content:center;">
+  <div class="sp-wrap">
+    <div class="sp-logo">☕</div>
+    <div class="sp-name">Зміна</div>
+    <div class="sp-sub">Контроль продуктивності</div>
+    <div class="sp-bar-wrap"><div class="sp-bar" id="sp-bar"></div></div>
+  </div>
+</div>
+
+<!-- ═══ LOGIN ═══ -->
+<div class="scr off" id="login" style="background:#000;align-items:center;justify-content:center;">
+  <div class="login-box">
+    <div class="login-logo">☕</div>
+    <div class="login-title">Ласкаво просимо</div>
+    <div class="login-sub">Введіть своє ім'я для початку</div>
+    <input class="inp" id="login-name" placeholder="Ваше ім'я" maxlength="30" autocomplete="off">
+    <input class="inp" id="login-role" placeholder="Посада (необов'язково)" maxlength="40" autocomplete="off">
+    <button class="login-btn" onclick="doLogin()">Почати роботу →</button>
+    <div class="login-skip" onclick="doLogin(true)">Пропустити</div>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="scr off" id="main">
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-title" id="tb-title">Зміна</div>
+      <div class="tb-sub" id="tb-sub">Зміна активна</div>
+    </div>
+    <div class="tb-right">
+      <div class="ib" id="clock-el">--:--</div>
+      <div class="ib" onclick="openSettings()">⚙️</div>
+    </div>
+  </div>
+  <div class="progress-wrap"><div class="progress-fill" id="sh-prog" style="width:0%"></div></div>
+
+  <!-- Onboarding carousel -->
+  <div id="carousel-section">
+    <div class="carousel-wrap" id="carousel-wrap">
+      <div class="carousel-track" id="carousel-track">
+        <div class="slide"><div><div class="slide-icon">☕</div><div class="slide-title">Контролюй перерви</div><div class="slide-body">Натисни «Вийшов» — таймер запустився. Повернувся — час зафіксовано. Все просто.</div></div><div class="slide-num">1 / 4</div></div>
+        <div class="slide"><div><div class="slide-icon">📊</div><div class="slide-title">Метрики під галузь</div><div class="slide-body">Обери галузь і додаток автоматично запропонує 30 KPI саме для твого бізнесу.</div></div><div class="slide-num">2 / 4</div></div>
+        <div class="slide"><div><div class="slide-icon">🏢</div><div class="slide-title">Кілька проектів</div><div class="slide-body">Додавай проекти для різних відділів або локацій. Перемикайся одним дотиком.</div></div><div class="slide-num">3 / 4</div></div>
+        <div class="slide"><div><div class="slide-icon">🏁</div><div class="slide-title">Автозвіт</div><div class="slide-body">О 22:00 зміна закривається автоматично — звіт готовий, копіюй одним натиском.</div></div><div class="slide-num">4 / 4</div></div>
+      </div>
+    </div>
+    <div class="carousel-dots" id="carousel-dots">
+      <div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <div class="carousel-hint">← Свайп →</div>
+  </div>
+
+  <!-- Projects -->
+  <div class="section-row">
+    <span class="sec-title">Проекти</span>
+    <button class="add-btn" onclick="openAddProject()">+</button>
+  </div>
+  <div class="projects-scroll" id="projects-scroll"></div>
+
+  <!-- Breaks list -->
+  <div class="break-section" style="margin-top:14px;">
+    <div class="breaks-header">
+      <span class="breaks-title" id="br-title">Виходи сьогодні</span>
+      <button class="copy-btn" id="copy-btn" onclick="copyAll()" style="display:none;">📋 Копіювати</button>
+    </div>
+    <div id="breaks-list"><div class="no-breaks">Виходів ще не було</div></div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="section-row" style="padding-top:14px;">
+    <span class="sec-title" id="metrics-title">Метрики</span>
+  </div>
+  <div class="metrics-grid" id="metrics-grid"></div>
+
+  <!-- Active timer -->
+  <div id="timer-block" style="display:none;">
+    <div class="timer-card">
+      <div><div class="tc-lbl">На перерві</div><div class="tc-val" id="tc-val">00:00</div><div class="tc-st" id="tc-st"></div></div>
+      <div class="tc-ico">☕</div>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="action-area" id="action-area"></div>
+  <div class="btn-row2" id="bottom-row">
+    <button class="sbtn btn-red" onclick="endShift()">🏁 Зміна</button>
+    <button class="sbtn btn-set" onclick="openSettings()">⚙️ Налаштування</button>
+  </div>
+  <div class="spacer"></div>
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div class="scr off" id="settings">
+  <div class="snav">
+    <button class="back" onclick="closeSettings()">‹ Назад</button>
+    <div class="snav-title">Налаштування</div>
+    <div style="width:60px;"></div>
+  </div>
+  <div style="overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;">
+
+    <!-- Profile -->
+    <div class="slbl">Профіль</div>
+    <div class="scard">
+      <div class="srow" onclick="openProfile()">
+        <div class="sri">👤</div>
+        <div class="srt"><div class="srt-t" id="set-name">Користувач</div><div class="srt-s" id="set-role">Редагувати профіль</div></div>
+        <div class="srr">›</div>
+      </div>
+    </div>
+
+    <!-- Language -->
+    <div class="slbl">Мова</div>
+    <div class="scard" style="padding:4px 0;">
+      <div class="lang-row" id="lang-row">
+        <div class="lang-pill on" onclick="setLang('uk',this)">🇺🇦 Українська</div>
+        <div class="lang-pill" onclick="setLang('ru',this)">🇷🇺 Русский</div>
+        <div class="lang-pill" onclick="setLang('en',this)">🇬🇧 English</div>
+      </div>
+    </div>
+
+    <!-- Shift time -->
+    <div class="slbl">Зміна</div>
+    <div class="scard">
+      <div class="time-row">
+        <span class="time-lbl">Початок</span>
+        <input type="time" class="time-inp" id="si-start" value="08:00" onchange="saveShiftTime()">
+      </div>
+      <div class="time-row">
+        <span class="time-lbl">Кінець</span>
+        <input type="time" class="time-inp" id="si-end" value="22:00" onchange="saveShiftTime()">
+      </div>
+    </div>
+
+    <!-- Projects management -->
+    <div class="slbl">Проекти</div>
+    <div class="scard" id="set-projects"></div>
+
+    <!-- Break thresholds -->
+    <div class="slbl">Пороги перерв</div>
+    <div class="scard" id="thresholds-card"></div>
+
+    <div style="height:calc(40px + var(--sb));"></div>
+  </div>
+</div>
+
+<!-- ═══ SHEETS ═══ -->
+
+<!-- Report -->
+<div class="overlay" id="report-overlay" onclick="closeOverlay('report-overlay',event)">
+  <div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title">Звіт за зміну</div>
+    <div class="sh-sub" id="rpt-date"></div>
+    <div class="rpt-row"><span class="rl">Виходів</span><span class="rv" id="rpt-count">0</span></div>
+    <div class="rpt-row"><span class="rl">Час перерв</span><span class="rv" id="rpt-total">0 хв</span></div>
+    <div class="rpt-row"><span class="rl">Середня</span><span class="rv" id="rpt-avg">0 хв</span></div>
+    <div class="rpt-row"><span class="rl">Затримок</span><span class="rv" id="rpt-late">0</span></div>
+    <div class="rpt-row"><span class="rl">Штрафів</span><span class="rv red" id="rpt-fine">0</span></div>
+    <div style="padding:14px 0 8px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);">Детально</div>
+    <div id="rpt-breaks"></div>
+    <button class="sh-btn" onclick="closeOverlay('report-overlay')">Закрити</button>
+  </div>
+</div>
+
+<!-- Add Project / Industry picker -->
+<div class="overlay" id="proj-overlay" onclick="closeOverlay('proj-overlay',event)">
+  <div class="sheet" id="proj-sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title" id="proj-sh-title">Новий проект</div>
+    <div class="sh-sub">Оберіть галузь для проекту</div>
+    <div class="ind-grid" id="ind-grid"></div>
+    <button class="sh-btn" id="ind-next-btn" style="opacity:.4;pointer-events:none;" onclick="goToMetricPicker()">Обрати метрики →</button>
+  </div>
+</div>
+
+<!-- Metric picker -->
+<div class="overlay" id="metric-overlay" onclick="closeOverlay('metric-overlay',event)">
+  <div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title" id="metric-sh-title">Метрики</div>
+    <div class="sh-sub" id="metric-sh-sub">Оберіть до 12 метрик для відображення</div>
+    <div class="mpick-list" id="metric-list"></div>
+    <button class="sh-btn grn" onclick="saveProjectMetrics()">Зберегти проект ✓</button>
+  </div>
+</div>
+
+<!-- Reorder metrics -->
+<div class="overlay" id="reorder-overlay" onclick="closeOverlay('reorder-overlay',event)">
+  <div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title">Порядок метрик</div>
+    <div class="sh-sub">Перетягніть для зміни порядку</div>
+    <div class="drag-list" id="drag-list"></div>
+    <button class="sh-btn" onclick="saveReorder()">Зберегти</button>
+  </div>
+</div>
+
+<!-- Profile editor -->
+<div class="overlay" id="profile-overlay" onclick="closeOverlay('profile-overlay',event)">
+  <div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title">Профіль</div>
+    <div class="avatar" id="prof-avatar">👤</div>
+    <div class="prof-name" id="prof-name-disp">—</div>
+    <div class="prof-role" id="prof-role-disp">—</div>
+    <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;">
+      <input class="inp" id="prof-name-inp" placeholder="Ім'я" style="background:var(--card2);color:var(--text);border:none;">
+      <input class="inp" id="prof-role-inp" placeholder="Посада" style="background:var(--card2);color:var(--text);border:none;">
+    </div>
+    <button class="sh-btn" onclick="saveProfile()">Зберегти</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// INDUSTRIES & METRICS DATABASE
+// ═══════════════════════════════════════════════
+const INDUSTRIES = [
+  {id:'retail',   emoji:'🛍️', name:'Рітейл',      desc:'Магазин, торгівля',    color:'#FF9500,#FF6B00'},
+  {id:'prod',     emoji:'🏭', name:'Виробництво', desc:'Завод, цех',           color:'#5E5CE6,#007AFF'},
+  {id:'logistics',emoji:'🚛', name:'Логістика',   desc:'Склад, доставка',      color:'#34C759,#32ADE6'},
+  {id:'food',     emoji:'🍽️', name:'HoReCa',      desc:'Ресторан, кафе',       color:'#FF2D55,#FF9500'},
+  {id:'callcenter',emoji:'🎧',name:'Кол-центр',   desc:'Підтримка, продажі',   color:'#007AFF,#5E5CE6'},
+  {id:'health',   emoji:'🏥', name:'Медицина',    desc:'Клініка, аптека',      color:'#FF3B30,#FF2D55'},
+  {id:'it',       emoji:'💻', name:'IT / Офіс',   desc:'Розробка, підтримка',  color:'#5E5CE6,#BF5AF2'},
+  {id:'constr',   emoji:'🏗️', name:'Будівництво', desc:'Майданчик, ремонт',    color:'#FF9500,#FFCC00'},
+  {id:'security', emoji:'🔒', name:'Охорона',     desc:'Пости, патруль',       color:'#1C1C1E,#3A3A3C'},
+  {id:'edu',      emoji:'📚', name:'Освіта',      desc:'Школа, курси',         color:'#32ADE6,#007AFF'},
+];
+
+const METRICS = {
+  // ─── Universal ───
+  breaks:       {icon:'☕', label:'Виходи',          unit:'',    group:'Перерви',   desc:'Виходів на перерву за зміну', auto:true},
+  total_break:  {icon:'⏱️', label:'Час перерв',      unit:'хв',  group:'Перерви',   desc:'Загальний час перерв', auto:true},
+  fines:        {icon:'⚠️', label:'Порушень',         unit:'',    group:'Перерви',   desc:'Штрафи + затримки', auto:true},
+  avg_break:    {icon:'📊', label:'Середня перерва',  unit:'хв',  group:'Перерви',   desc:'Середній час виходу', auto:true},
+  prev_breaks:  {icon:'📅', label:'Минула зміна',     unit:'',    group:'Перерви',   desc:'Виходів вчора', auto:true},
+  days_worked:  {icon:'📆', label:'Днів у місяці',    unit:'',    group:'Перерви',   desc:'Відпрацьованих днів', auto:true},
+  shift_pct:    {icon:'⚡', label:'% зміни',          unit:'%',   group:'Зміна',     desc:'Скільки зміни пройшло', auto:true},
+  // ─── Retail 30 ───
+  sales_hr:     {icon:'💰', label:'Продажів/год',     unit:'',    group:'Продажі',   desc:'Кількість продажів за годину',           ind:'retail'},
+  customers:    {icon:'👥', label:'Клієнтів',         unit:'',    group:'Продажі',   desc:'Обслужено клієнтів за зміну',            ind:'retail'},
+  conversion:   {icon:'🎯', label:'Конверсія',        unit:'%',   group:'Продажі',   desc:'% покупців від відвідувачів',            ind:'retail'},
+  revenue:      {icon:'💵', label:'Виручка',          unit:'₴',   group:'Фінанси',   desc:'Виручка за зміну',                       ind:'retail'},
+  avg_check:    {icon:'🧾', label:'Середній чек',     unit:'₴',   group:'Фінанси',   desc:'Середня сума покупки',                   ind:'retail'},
+  returns:      {icon:'↩️', label:'Повернень',        unit:'',    group:'Якість',    desc:'Кількість повернень товару',              ind:'retail'},
+  upt:          {icon:'📦', label:'UPT',              unit:'',    group:'Продажі',   desc:'Одиниць у чеку (units per transaction)', ind:'retail'},
+  atv:          {icon:'📈', label:'ATV',              unit:'₴',   group:'Фінанси',   desc:'Середня вартість транзакції',            ind:'retail'},
+  footfall:     {icon:'🚶', label:'Трафік',           unit:'',    group:'Зал',       desc:'Кількість відвідувачів',                 ind:'retail'},
+  queue_time:   {icon:'⌛', label:'Час черги',        unit:'хв',  group:'Сервіс',    desc:'Середній час очікування',                ind:'retail'},
+  stock_out:    {icon:'🔴', label:'Дефіцит',          unit:'',    group:'Склад',     desc:'Позиції з відсутністю',                  ind:'retail'},
+  stock_lvl:    {icon:'📦', label:'Залишок',          unit:'%',   group:'Склад',     desc:'Рівень залишків від норми',              ind:'retail'},
+  cashier_spd:  {icon:'⚡', label:'Швидкість каси',   unit:'с',   group:'Сервіс',    desc:'Середній час обслуговування на касі',    ind:'retail'},
+  promo_sales:  {icon:'🏷️', label:'Акційний продаж', unit:'%',   group:'Продажі',   desc:'% продажів за акційними цінами',         ind:'retail'},
+  basket_size:  {icon:'🛒', label:'Кошик',            unit:'поз', group:'Продажі',   desc:'Середня кількість позицій у чеку',       ind:'retail'},
+  loyalty_scan: {icon:'💳', label:'Карток лояльн.',   unit:'',    group:'CRM',       desc:'Використано карток лояльності',          ind:'retail'},
+  nps_score:    {icon:'⭐', label:'NPS',              unit:'',    group:'Сервіс',    desc:'Net Promoter Score',                     ind:'retail'},
+  loss_prev:    {icon:'🔐', label:'Втрати',           unit:'₴',   group:'Безпека',   desc:'Зафіксовані втрати (кража, брак)',       ind:'retail'},
+  cross_sell:   {icon:'🤝', label:'Крос-продажі',     unit:'%',   group:'Продажі',   desc:'% чеків з додатковими позиціями',        ind:'retail'},
+  refusal_rate: {icon:'❌', label:'Відмов',            unit:'%',   group:'Якість',    desc:'% відмов від покупки',                   ind:'retail'},
+  vip_service:  {icon:'👑', label:'VIP клієнтів',     unit:'',    group:'CRM',       desc:'Обслужено VIP клієнтів',                 ind:'retail'},
+  gift_cards:   {icon:'🎁', label:'Подарункових',     unit:'',    group:'Продажі',   desc:'Продано подарункових карток',            ind:'retail'},
+  layaway:      {icon:'📋', label:'Відкладень',        unit:'',    group:'Продажі',   desc:'Оформлено відкладок',                    ind:'retail'},
+  complaint:    {icon:'😤', label:'Скарг',            unit:'',    group:'Якість',    desc:'Кількість скарг від клієнтів',           ind:'retail'},
+  staff_prod:   {icon:'💪', label:'Продукт. персон.', unit:'₴',   group:'Кадри',     desc:'Виручка на одного продавця',             ind:'retail'},
+  // ─── Production 30 ───
+  units_hr:     {icon:'⚙️', label:'Одиниць/год',      unit:'',    group:'Виробн.',   desc:'Продуктивність за годину',               ind:'prod'},
+  defect_rate:  {icon:'❌', label:'Брак',              unit:'%',   group:'Якість',    desc:'% браку від загального обсягу',          ind:'prod'},
+  oee:          {icon:'🏆', label:'OEE',              unit:'%',   group:'Ефектив.',  desc:'Загальна ефективність обладнання',       ind:'prod'},
+  uptime:       {icon:'🟢', label:'Аптайм',           unit:'%',   group:'Обладн.',   desc:'% часу роботи обладнання',               ind:'prod'},
+  downtime:     {icon:'🔴', label:'Простій',          unit:'хв',  group:'Обладн.',   desc:'Час простою за зміну',                   ind:'prod'},
+  waste_kg:     {icon:'🗑️', label:'Відходи',          unit:'кг',  group:'Якість',    desc:'Обсяг виробничих відходів',              ind:'prod'},
+  scrap_rate:   {icon:'♻️', label:'Утиліз. відходів', unit:'%',   group:'Якість',    desc:'% відходів направлених на утилізацію',   ind:'prod'},
+  takt_time:    {icon:'⏱️', label:'Такт-час',         unit:'с',   group:'Процес',    desc:'Фактичний час на одиницю продукції',     ind:'prod'},
+  cycle_time:   {icon:'🔄', label:'Цикл-час',         unit:'с',   group:'Процес',    desc:'Час виробничого циклу',                  ind:'prod'},
+  yield_rate:   {icon:'✅', label:'Вихід продукції',  unit:'%',   group:'Якість',    desc:'% продукції, що пройшла ВТК з першого разу',ind:'prod'},
+  changeover:   {icon:'🔧', label:'Переналагодження', unit:'хв',  group:'Процес',    desc:'Час переналагодження лінії',             ind:'prod'},
+  energy_kwh:   {icon:'⚡', label:'Електроенергія',   unit:'кВт', group:'Ресурси',   desc:'Витрати електроенергії за зміну',        ind:'prod'},
+  raw_material: {icon:'📦', label:'Сировина',         unit:'кг',  group:'Ресурси',   desc:'Витрачено сировини',                     ind:'prod'},
+  labor_eff:    {icon:'👷', label:'Ефект. праці',     unit:'%',   group:'Кадри',     desc:'Факт vs план по виробітку',              ind:'prod'},
+  fpy:          {icon:'🎯', label:'FPY',              unit:'%',   group:'Якість',    desc:'First Pass Yield — перший прохід без браку',ind:'prod'},
+  mtbf:         {icon:'⏳', label:'MTBF',             unit:'год', group:'Обладн.',   desc:'Середній час між відмовами',             ind:'prod'},
+  mttr:         {icon:'🔩', label:'MTTR',             unit:'хв',  group:'Обладн.',   desc:'Середній час відновлення',               ind:'prod'},
+  safety_inc:   {icon:'⛑️', label:'Інцидентів',       unit:'',    group:'Безпека',   desc:'Порушення безпеки за зміну',             ind:'prod'},
+  near_miss:    {icon:'🚨', label:'Near miss',        unit:'',    group:'Безпека',   desc:'Майже-нещасні випадки',                  ind:'prod'},
+  plan_fulfill: {icon:'📋', label:'Виконання плану',  unit:'%',   group:'Ефектив.',  desc:'% виконання виробничого плану',          ind:'prod'},
+  prod_cost:    {icon:'💰', label:'Собівартість',     unit:'₴',   group:'Фінанси',   desc:'Собівартість продукції за зміну',        ind:'prod'},
+  rework_rate:  {icon:'🔄', label:'Переробки',        unit:'%',   group:'Якість',    desc:'% продукції на переробку',               ind:'prod'},
+  wip:          {icon:'🏗️', label:'Незавершене вир.', unit:'шт',  group:'Процес',    desc:'Work in Progress',                       ind:'prod'},
+  throughput:   {icon:'📈', label:'Пропускна здатн.',  unit:'шт/г',group:'Ефектив.',  desc:'Одиниць на виході за годину',            ind:'prod'},
+  // ─── Logistics 30 ───
+  deliveries:   {icon:'📬', label:'Доставок',         unit:'',    group:'Логістика', desc:'Виконано доставок за зміну',             ind:'logistics'},
+  on_time:      {icon:'✅', label:'Вчасно',           unit:'%',   group:'Якість',    desc:'% вчасних доставок',                    ind:'logistics'},
+  km_driven:    {icon:'🛣️', label:'Кілометрів',       unit:'км',  group:'Транспорт', desc:'Пройдено км за зміну',                   ind:'logistics'},
+  fuel_l:       {icon:'⛽', label:'Пальне',           unit:'л',   group:'Транспорт', desc:'Витрати пального',                       ind:'logistics'},
+  orders_hr:    {icon:'📋', label:'Замовлень/год',    unit:'',    group:'Склад',     desc:'Оброблено замовлень за годину',          ind:'logistics'},
+  pick_acc:     {icon:'🎯', label:'Точність відбору', unit:'%',   group:'Якість',    desc:'% правильно відібраних позицій',         ind:'logistics'},
+  late_del:     {icon:'🔔', label:'Прострочень',      unit:'',    group:'Якість',    desc:'Запізнілих доставок',                    ind:'logistics'},
+  dmg_rate:     {icon:'💔', label:'Пошкоджень',       unit:'%',   group:'Якість',    desc:'% пошкоджених вантажів',                 ind:'logistics'},
+  dock_time:    {icon:'⏱️', label:'Час докування',    unit:'хв',  group:'Склад',     desc:'Середній час розвантаження',             ind:'logistics'},
+  inv_acc:      {icon:'📦', label:'Точність запасів', unit:'%',   group:'Склад',     desc:'% відповідності фізич. залишків до облікових',ind:'logistics'},
+  cost_del:     {icon:'💰', label:'Вартість доставки', unit:'₴',  group:'Фінанси',   desc:'Середня вартість однієї доставки',       ind:'logistics'},
+  load_eff:     {icon:'📐', label:'Завантаження авто', unit:'%',  group:'Транспорт', desc:'% використання вантажоємності',          ind:'logistics'},
+  route_eff:    {icon:'🗺️', label:'Ефект. маршруту',  unit:'%',   group:'Транспорт', desc:'Фактичний vs оптимальний маршрут',       ind:'logistics'},
+  returns_log:  {icon:'↩️', label:'Повернень',        unit:'',    group:'Якість',    desc:'Кількість повернених відправлень',        ind:'logistics'},
+  sku_per_ord:  {icon:'📊', label:'SKU/замовлення',   unit:'',    group:'Склад',     desc:'Середня кількість SKU у замовленні',     ind:'logistics'},
+  // ─── Food/HoReCa 30 ───
+  covers:       {icon:'🍽️', label:'Гостей',           unit:'',    group:'Зал',       desc:'Обслужено гостей за зміну',              ind:'food'},
+  table_turn:   {icon:'🔄', label:'Оборот столів',    unit:'',    group:'Зал',       desc:'Середній оборот столу за зміну',         ind:'food'},
+  kitchen_time: {icon:'👨‍🍳', label:'Час кухні',        unit:'хв',  group:'Кухня',     desc:'Середній час приготування',              ind:'food'},
+  avg_check_f:  {icon:'🧾', label:'Середній чек',     unit:'₴',   group:'Фінанси',   desc:'Середній чек на гостя',                  ind:'food'},
+  tips:         {icon:'💝', label:'Чайові',           unit:'₴',   group:'Фінанси',   desc:'Загальна сума чайових',                  ind:'food'},
+  waste_food:   {icon:'🗑️', label:'Списань',          unit:'₴',   group:'Кухня',     desc:'Вартість списаних продуктів',            ind:'food'},
+  csat_food:    {icon:'⭐', label:'Оцінка гостей',    unit:'/5',  group:'Сервіс',    desc:'Середня оцінка від гостей',              ind:'food'},
+  upsell_rate:  {icon:'📈', label:'Апсейл',           unit:'%',   group:'Продажі',   desc:'% гостей, яким допродали позицію',       ind:'food'},
+  no_show:      {icon:'❌', label:'No-show',           unit:'',    group:'Брон.',     desc:'Невиконані бронювання',                  ind:'food'},
+  reservation:  {icon:'📅', label:'Бронювань',        unit:'',    group:'Брон.',     desc:'Кількість бронювань за зміну',            ind:'food'},
+  delivery_ord: {icon:'🛵', label:'Доставок',         unit:'',    group:'Доставка',  desc:'Виконано замовлень доставки',            ind:'food'},
+  food_cost:    {icon:'💰', label:'Food cost',        unit:'%',   group:'Фінанси',   desc:'Собівартість страв від виручки',          ind:'food'},
+  labor_cost_f: {icon:'👥', label:'Labor cost',       unit:'%',   group:'Фінанси',   desc:'Витрати на персонал від виручки',         ind:'food'},
+  revenue_f:    {icon:'💵', label:'Виручка',          unit:'₴',   group:'Фінанси',   desc:'Загальна виручка за зміну',              ind:'food'},
+  // ─── Call Center 30 ───
+  calls_hdl:    {icon:'📞', label:'Дзвінків',         unit:'',    group:'Дзвінки',   desc:'Оброблено дзвінків',                     ind:'callcenter'},
+  aht:          {icon:'⏱️', label:'AHT',              unit:'с',   group:'Якість',    desc:'Середній час обробки',                   ind:'callcenter'},
+  fcr:          {icon:'✅', label:'FCR',              unit:'%',   group:'Якість',    desc:'Вирішення з першого звернення',          ind:'callcenter'},
+  csat_cc:      {icon:'😊', label:'CSAT',             unit:'%',   group:'Якість',    desc:'Задоволеність клієнтів',                 ind:'callcenter'},
+  awr:          {icon:'📵', label:'Abandon rate',     unit:'%',   group:'Дзвінки',   desc:'% кинутих дзвінків',                    ind:'callcenter'},
+  sl_pct:       {icon:'⚡', label:'Service Level',   unit:'%',   group:'Якість',    desc:'% дзвінків відповідь до 20с',            ind:'callcenter'},
+  transfers:    {icon:'↗️', label:'Переводів',        unit:'',    group:'Дзвінки',   desc:'Кількість переведених дзвінків',         ind:'callcenter'},
+  hold_time:    {icon:'⏸️', label:'Hold time',       unit:'с',   group:'Якість',    desc:'Середній час утримання',                 ind:'callcenter'},
+  wrap_time:    {icon:'📝', label:'Wrap-up time',    unit:'с',   group:'Якість',    desc:'Час після завершення дзвінка',           ind:'callcenter'},
+  occu:         {icon:'📊', label:'Occupancy',       unit:'%',   group:'Ефектив.',  desc:'% часу в активних дзвінках',             ind:'callcenter'},
+  nps_cc:       {icon:'⭐', label:'NPS',             unit:'',    group:'Якість',    desc:'Net Promoter Score',                     ind:'callcenter'},
+  sales_cc:     {icon:'💰', label:'Продажів',        unit:'',    group:'Продажі',   desc:'Успішних продажів по телефону',          ind:'callcenter'},
+  conv_cc:      {icon:'🎯', label:'Конверсія',       unit:'%',   group:'Продажі',   desc:'% дзвінків що завершились продажем',     ind:'callcenter'},
+  recall:       {icon:'🔁', label:'Перезвон',        unit:'',    group:'Дзвінки',   desc:'Кількість повторних звернень',           ind:'callcenter'},
+  // ─── Healthcare 30 ───
+  patients:     {icon:'👤', label:'Пацієнтів',       unit:'',    group:'Прийом',    desc:'Прийнято пацієнтів за зміну',            ind:'health'},
+  wait_time:    {icon:'⌛', label:'Час очікування',  unit:'хв',  group:'Сервіс',    desc:'Середній час очікування прийому',        ind:'health'},
+  procedures:   {icon:'💉', label:'Процедур',        unit:'',    group:'Прийом',    desc:'Проведено процедур',                     ind:'health'},
+  prescr:       {icon:'💊', label:'Рецептів',        unit:'',    group:'Прийом',    desc:'Виписано рецептів',                      ind:'health'},
+  bed_occ:      {icon:'🛏️', label:'Заповненість',    unit:'%',   group:'Ресурси',   desc:'% зайнятих ліжок',                      ind:'health'},
+  readmit:      {icon:'🔁', label:'Повторних',       unit:'',    group:'Якість',    desc:'Повторних госпіталізацій',               ind:'health'},
+  inc_health:   {icon:'🚨', label:'Інцидентів',      unit:'',    group:'Безпека',   desc:'Нестандартних ситуацій',                 ind:'health'},
+  handoffs:     {icon:'🤝', label:'Передач',         unit:'',    group:'Процес',    desc:'Передач між змінами',                    ind:'health'},
+  diag_acc:     {icon:'🔬', label:'Точність діагн.', unit:'%',   group:'Якість',    desc:'% підтверджених діагнозів',              ind:'health'},
+  // ─── IT 30 ───
+  tickets:      {icon:'🎫', label:'Тікетів',         unit:'',    group:'Підтримка', desc:'Вирішено тікетів',                       ind:'it'},
+  bugs:         {icon:'🐛', label:'Багів',           unit:'',    group:'Розробка',  desc:'Виправлено помилок',                     ind:'it'},
+  commits:      {icon:'💾', label:'Комітів',         unit:'',    group:'Розробка',  desc:'Git-коміти за зміну',                    ind:'it'},
+  resp_time:    {icon:'⚡', label:'Час відповіді',   unit:'хв',  group:'Підтримка', desc:'Середній час першої відповіді',          ind:'it'},
+  deploys:      {icon:'🚀', label:'Деплойментів',    unit:'',    group:'Розробка',  desc:'Виконано деплойментів',                  ind:'it'},
+  uptime_it:    {icon:'🟢', label:'Uptime сервісу',  unit:'%',   group:'Інфра',     desc:'Доступність ключових сервісів',          ind:'it'},
+  incidents_it: {icon:'🚨', label:'Інцидентів',      unit:'',    group:'Інфра',     desc:'Продакшн-інцидентів за зміну',           ind:'it'},
+  pr_merged:    {icon:'🔀', label:'PR merged',       unit:'',    group:'Розробка',  desc:'Злитих pull requests',                   ind:'it'},
+  code_review:  {icon:'👁️', label:'Code review',    unit:'',    group:'Розробка',  desc:'Проведено ревью коду',                   ind:'it'},
+  focus_h:      {icon:'🎯', label:'Фокус-час',       unit:'год', group:'Продукт.',  desc:'Години глибокої роботи',                 ind:'it'},
+  meetings_h:   {icon:'📅', label:'Мітинги',         unit:'год', group:'Час',       desc:'Загальний час нарад',                    ind:'it'},
+  blockers:     {icon:'🚧', label:'Блокерів',        unit:'',    group:'Процес',    desc:'Заблокованих задач',                     ind:'it'},
+  test_cov:     {icon:'🧪', label:'Test coverage',  unit:'%',   group:'Якість',    desc:'Покриття коду тестами',                  ind:'it'},
+  // ─── Construction 30 ───
+  tasks_done:   {icon:'✅', label:'Задач виконано',  unit:'',    group:'Прогрес',   desc:'Виконано завдань за зміну',              ind:'constr'},
+  safety_c:     {icon:'⛑️', label:'Інцидентів',      unit:'',    group:'Безпека',   desc:'Порушення ТБ за зміну',                  ind:'constr'},
+  material_pct: {icon:'🧱', label:'Матеріали',       unit:'%',   group:'Ресурси',   desc:'Використано від плану',                  ind:'constr'},
+  equip_h:      {icon:'🔧', label:'Техніка',         unit:'год', group:'Ресурси',   desc:'Час використання техніки',               ind:'constr'},
+  rework_c:     {icon:'🔄', label:'Переробок',       unit:'',    group:'Якість',    desc:'Кількість переробок',                    ind:'constr'},
+  progress_c:   {icon:'📊', label:'Прогрес',         unit:'%',   group:'Прогрес',   desc:'Виконання плану зміни',                  ind:'constr'},
+  crew:         {icon:'👷', label:'Бригада',         unit:'осіб',group:'Кадри',     desc:'Присутніх на зміні',                     ind:'constr'},
+  concrete_m3:  {icon:'🏗️', label:'Бетон залито',   unit:'м³',  group:'Обсяги',    desc:'Обсяг укладеного бетону',                ind:'constr'},
+  // ─── Security 30 ───
+  rounds:       {icon:'🔄', label:'Обходів',         unit:'',    group:'Патруль',   desc:'Виконано обходів',                       ind:'security'},
+  resp_s:       {icon:'⚡', label:'Час реагування',  unit:'с',   group:'Реагув.',   desc:'Середній час реагування',                ind:'security'},
+  posts_chk:    {icon:'📍', label:'Постів перевір.', unit:'',    group:'Патруль',   desc:'Перевірено постів',                      ind:'security'},
+  violations:   {icon:'🚫', label:'Порушень',        unit:'',    group:'Безпека',   desc:'Зафіксовано порушень',                   ind:'security'},
+  escalations:  {icon:'📢', label:'Ескалацій',       unit:'',    group:'Реагув.',   desc:'Ескалованих ситуацій',                   ind:'security'},
+  patrol_km:    {icon:'🗺️', label:'Патруль км',      unit:'км',  group:'Патруль',   desc:'Пройдено км патрулем',                   ind:'security'},
+  // ─── Education 30 ───
+  lessons:      {icon:'📖', label:'Уроків',          unit:'',    group:'Навчання',  desc:'Проведено занять',                       ind:'edu'},
+  attendance:   {icon:'👥', label:'Присутність',     unit:'%',   group:'Навчання',  desc:'% присутніх учнів',                      ind:'edu'},
+  homework:     {icon:'✏️', label:'Д/з здано',       unit:'%',   group:'Навчання',  desc:'% зданих домашніх завдань',              ind:'edu'},
+  avg_score:    {icon:'🏅', label:'Середній бал',    unit:'',    group:'Успішність',desc:'Середній бал по класу',                  ind:'edu'},
+  parents:      {icon:'📱', label:'Контакти з батьками',unit:'',group:'Комунікація',desc:'Звернень від батьків',                   ind:'edu'},
+};
+
+// Colors per industry
+const IND_COLORS={
+  retail:'#FF9500,#FF6B00', prod:'#5E5CE6,#007AFF', logistics:'#34C759,#32ADE6',
+  food:'#FF2D55,#FF9500', callcenter:'#007AFF,#5E5CE6', health:'#FF3B30,#FF2D55',
+  it:'#5E5CE6,#BF5AF2', constr:'#FF9500,#FFCC00', security:'#636366,#48484A', edu:'#32ADE6,#007AFF'
+};
+
+const DEFAULT_PROJECT = {
+  id:'default', name:'Стандартна зміна', industryId:'retail',
+  metrics:['breaks','total_break','fines','avg_break','prev_breaks','days_worked','shift_pct'],
+  breaks:[], onBreak:false, breakStart:null, shiftEnded:false,
+};
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const KEY='zmina_v2';
+let S = loadState();
+let timerInt=null, autoFired=false;
+let pendingIndustry=null, pendingProjectId=null;
+let tmpSelectedMetrics=[];
+let dragSrc=null;
+
+function today(){const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;}
+
+function loadState(){
+  try{
+    const r=localStorage.getItem(KEY);
+    if(r){
+      const s=JSON.parse(r);
+      // Reset day data if new day
+      if(s.lastDate!==today()){
+        // Save prev for each project
+        s.projects.forEach(p=>{
+          localStorage.setItem(KEY+'_prev_'+p.id, JSON.stringify({count:p.breaks.length}));
+          p.breaks=[]; p.onBreak=false; p.breakStart=null; p.shiftEnded=false;
+        });
+        let dw=s.daysWorked||0;
+        s.daysWorked=dw+1;
+        s.lastDate=today();
+        localStorage.setItem(KEY,JSON.stringify(s));
+      }
+      return s;
+    }
+  }catch(e){}
+  return {
+    firstRun:true, lastDate:today(), daysWorked:0,
+    user:{name:'',role:''},
+    lang:'uk',
+    shiftStart:'08:00', shiftEnd:'22:00',
+    activeProjectId:'default',
+    showCarousel:true,
+    thresholds:{ok:10,late:15,lunch:20,ll:25},
+    projects:[JSON.parse(JSON.stringify(DEFAULT_PROJECT))],
+  };
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function proj(){return S.projects.find(p=>p.id===S.activeProjectId)||S.projects[0];}
+
+// ═══════════════════════════════════════════════
+// SPLASH
+// ═══════════════════════════════════════════════
+(function(){
+  const bar=document.getElementById('sp-bar');
+  let pct=0;
+  const iv=setInterval(()=>{
+    pct+=Math.random()*10+5;
+    if(pct>=100){
+      pct=100; bar.style.width='100%'; clearInterval(iv);
+      setTimeout(()=>{
+        hide('splash');
+        if(S.firstRun){ show('login'); }
+        else { show('main'); initMain(); }
+      }, 350);
+      return;
+    }
+    bar.style.width=pct+'%';
+  }, 80);
+})();
+
+function show(id){document.getElementById(id).classList.remove('off');}
+function hide(id){document.getElementById(id).classList.add('off');}
+
+// ═══════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════
+function doLogin(skip){
+  const name=skip?'Користувач':document.getElementById('login-name').value.trim()||'Користувач';
+  const role=skip?'':document.getElementById('login-role').value.trim();
+  S.user={name,role}; S.firstRun=false; save();
+  hide('login'); show('main'); initMain();
+}
+
+// ═══════════════════════════════════════════════
+// CAROUSEL
+// ═══════════════════════════════════════════════
+(function(){
+  const track=document.getElementById('carousel-track');
+  const dots=document.getElementById('carousel-dots').children;
+  let cur=0, startX=0, isDragging=false;
+  const slides=track.children;
+  const N=slides.length;
+  function go(n){
+    cur=Math.max(0,Math.min(N-1,n));
+    const w=slides[0].offsetWidth+12;
+    track.style.transform=`translateX(${-cur*(w)}px)`;
+    Array.from(dots).forEach((d,i)=>{d.className='dot'+(i===cur?' on':'');});
+  }
+  track.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;isDragging=true;},{passive:true});
+  track.addEventListener('touchend',e=>{
+    if(!isDragging)return; isDragging=false;
+    const dx=e.changedTouches[0].clientX-startX;
+    if(dx<-40)go(cur+1); else if(dx>40)go(cur-1);
+  });
+  // Auto-advance
+  setInterval(()=>{go(cur<N-1?cur+1:0);},4000);
+})();
+
+// ═══════════════════════════════════════════════
+// MAIN INIT
+// ═══════════════════════════════════════════════
+function initMain(){
+  if(!S.showCarousel){document.getElementById('carousel-section').style.display='none';}
+  renderProjects();
+  render();
+  startClock();
+  if(proj().onBreak)startTimer();
+}
+
+// ═══════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════
+function render(){
+  const p=proj();
+  // Topbar
+  document.getElementById('tb-title').textContent=p.name+(p.breaks.length>0?` (${p.breaks.length})`:'');
+  const sub=document.getElementById('tb-sub');
+  if(p.shiftEnded){sub.textContent='Зміна завершена';sub.style.color='var(--red)';}
+  else if(p.onBreak){sub.textContent='На перерві';sub.style.color='var(--orange)';}
+  else{sub.textContent=`Зміна · ${S.shiftStart}–${S.shiftEnd}`;sub.style.color='';}
+  // Breaks
+  renderBreaks(p);
+  // Metrics
+  renderMetrics(p);
+  // Action btn
+  renderActionBtn(p);
+}
+
+function renderProjects(){
+  const scroll=document.getElementById('projects-scroll');
+  scroll.innerHTML='';
+  S.projects.forEach(p=>{
+    const ind=INDUSTRIES.find(i=>i.id===p.industryId)||INDUSTRIES[0];
+    const colors=IND_COLORS[p.industryId]||'#FF9500,#FF6B00';
+    const isActive=p.id===S.activeProjectId;
+    const card=document.createElement('div');
+    card.className='proj-card'+(isActive?' active-proj':'');
+    card.style.background=`linear-gradient(135deg,#${colors.split(',')[0].replace('#','')},#${colors.split(',')[1].replace('#','')})`;
+    const prev=getPrev(p.id);
+    card.innerHTML=`
+      <span class="proj-emoji">${ind.emoji}</span>
+      <div class="proj-name">${p.name}</div>
+      <div class="proj-sub">${ind.name} · ${p.breaks.length} виходів</div>
+      ${isActive?'<div class="proj-badge">Активний</div>':''}
+    `;
+    card.onclick=()=>{S.activeProjectId=p.id;save();renderProjects();render();};
+    scroll.appendChild(card);
+  });
+}
+
+function renderBreaks(p){
+  const list=document.getElementById('breaks-list');
+  const copyBtn=document.getElementById('copy-btn');
+  if(!p.breaks.length){list.innerHTML='<div class="no-breaks">Виходів ще не було</div>';copyBtn.style.display='none';return;}
+  copyBtn.style.display='flex';
+  list.innerHTML='';
+  p.breaks.forEach((b,i)=>{
+    const info=classify(b.d);
+    const row=document.createElement('div');row.className='break-row';
+    row.innerHTML=`<div class="bdot" style="background:${info.dot};"></div>
+      <span class="bn">Вихід ${i+1}</span>
+      <span class="bt">${ft(b.s)} → ${ft(b.e)}</span>
+      <span class="bd" style="color:${info.dot};">${fd(b.d)}</span>
+      <span class="spill ${info.cls}">${info.label}</span>`;
+    list.appendChild(row);
+  });
+}
+
+function renderMetrics(p){
+  const grid=document.getElementById('metrics-grid');
+  grid.innerHTML='';
+  const title=document.getElementById('metrics-title');
+  title.innerHTML=`Метрики <span style="font-size:10px;font-weight:500;color:var(--blue);cursor:pointer;" onclick="openReorder()">Порядок ›</span>`;
+  (p.metrics||[]).forEach(id=>{
+    const def=METRICS[id];if(!def)return;
+    const val=getVal(p,id);
+    const card=document.createElement('div');card.className='mc';
+    const isManual=!def.auto;
+    if(isManual){card.innerHTML+=`<div class="mc-edit" onclick="editMetric('${id}')">✏️ ред.</div>`;}
+    card.innerHTML+=`<span class="mc-icon">${def.icon}</span>
+      <span class="mc-val">${val}<span class="mc-unit">${def.unit&&val!=='–'?' '+def.unit:''}</span></span>
+      <span class="mc-lbl">${def.label}</span>`;
+    grid.appendChild(card);
+  });
+}
+
+function renderActionBtn(p){
+  const aa=document.getElementById('action-area');
+  const br=document.getElementById('bottom-row');
+  if(p.shiftEnded){
+    aa.innerHTML=`<button class="mbtn btn-gr" disabled>✅ Зміна завершена</button>`;
+    br.style.display='none';
+  } else if(p.onBreak){
+    aa.innerHTML=`<button class="mbtn btn-bl" onclick="endBreak()">🚶 Повернувся з перерви</button>`;
+    br.style.display='flex';
+  } else {
+    aa.innerHTML=`<button class="mbtn btn-or" onclick="startBreak()">☕ Вийшов на перерву</button>`;
+    br.style.display='flex';
+  }
+  document.getElementById('timer-block').style.display=(p.onBreak&&!p.shiftEnded)?'block':'none';
+  if(p.onBreak)tickTimer();
+}
+
+// ═══════════════════════════════════════════════
+// BREAK LOGIC
+// ═══════════════════════════════════════════════
+function classify(ms){
+  const t=S.thresholds||{ok:10,late:15,lunch:20,ll:25};
+  const m=ms/60000;
+  if(m<=t.ok)return{label:'Норма',cls:'spill-ok',dot:'#34C759'};
+  if(m<=t.late)return{label:'Затримка',cls:'spill-late',dot:'#FF9500'};
+  if(m<=t.lunch)return{label:'Обід',cls:'spill-lunch',dot:'#007AFF'};
+  if(m<=t.ll)return{label:'Обід+затримка',cls:'spill-ll',dot:'#5E5CE6'};
+  return{label:'Штраф',cls:'spill-fine',dot:'#FF3B30'};
+}
+function ft(iso){return new Date(iso).toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});}
+function fd(ms){const m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000);return m>0?`${m}хв ${s}с`:`${s}с`;}
+function fm(ms){return Math.round(ms/60000)+' хв';}
+
+function startBreak(){
+  const p=proj();if(p.onBreak||p.shiftEnded)return;
+  p.onBreak=true;p.breakStart=new Date().toISOString();save();render();startTimer();
+}
+function endBreak(){
+  const p=proj();if(!p.onBreak||p.shiftEnded)return;
+  const s=new Date(p.breakStart),e=new Date();
+  p.breaks.push({s:p.breakStart,e:e.toISOString(),d:e-s});
+  p.onBreak=false;p.breakStart=null;save();stopTimer();render();renderProjects();
+}
+function endShift(){
+  const p=proj();if(p.shiftEnded)return;
+  if(p.onBreak)endBreak();
+  p.shiftEnded=true;
+  localStorage.setItem(KEY+'_prev_'+p.id,JSON.stringify({count:p.breaks.length}));
+  save();stopTimer();render();renderProjects();openReport();
+}
+
+function startTimer(){stopTimer();timerInt=setInterval(tickTimer,1000);tickTimer();}
+function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}}
+function tickTimer(){
+  const p=proj();if(!p.onBreak||!p.breakStart)return;
+  const ms=new Date()-new Date(p.breakStart);
+  const m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000);
+  const v=document.getElementById('tc-val');if(v)v.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const st=document.getElementById('tc-st');
+  if(st){const info=classify(ms);st.textContent=info.label;st.style.color=info.dot;}
+}
+
+// ═══════════════════════════════════════════════
+// METRIC VALUES
+// ═══════════════════════════════════════════════
+function getPrev(pid){
+  try{return (JSON.parse(localStorage.getItem(KEY+'_prev_'+pid))||{}).count||0;}catch(e){return 0;}
+}
+function getVal(p,id){
+  if(!METRICS[id])return'–';
+  if(METRICS[id].auto){
+    const total=p.breaks.reduce((a,b)=>a+b.d,0);
+    switch(id){
+      case'breaks':return p.breaks.length;
+      case'total_break':return Math.round(total/60000);
+      case'fines':return p.breaks.filter(b=>['spill-fine','spill-late','spill-ll'].includes(classify(b.d).cls)).length;
+      case'avg_break':return p.breaks.length?Math.round(total/p.breaks.length/60000):0;
+      case'prev_breaks':return getPrev(p.id)||'–';
+      case'days_worked':return S.daysWorked+(p.shiftEnded?1:0);
+      case'shift_pct':{
+        const[sh,sm]=S.shiftStart.split(':').map(Number);
+        const[eh,em]=S.shiftEnd.split(':').map(Number);
+        const now=new Date(),h=now.getHours(),m2=now.getMinutes();
+        const tot2=(eh*60+em)-(sh*60+sm);
+        const el=Math.max(0,(h*60+m2)-(sh*60+sm));
+        return Math.min(100,Math.round(el/tot2*100));
+      }
+    }
+  }
+  return (p.manualValues&&p.manualValues[id]!==undefined)?p.manualValues[id]:'–';
+}
+
+function editMetric(id){
+  const p=proj();const def=METRICS[id];
+  const cur=(p.manualValues&&p.manualValues[id]!==undefined)?p.manualValues[id]:0;
+  const val=prompt(`${def.icon} ${def.label}\n${def.desc}\nВведіть значення:`,cur);
+  if(val===null)return;
+  const n=parseFloat(val);if(!isNaN(n)){
+    if(!p.manualValues)p.manualValues={};
+    p.manualValues[id]=n;save();renderMetrics(p);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════════
+function startClock(){updateClock();setInterval(updateClock,15000);}
+function updateClock(){
+  const now=new Date();
+  const el=document.getElementById('clock-el');if(el)el.textContent=now.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+  const[sh,sm]=S.shiftStart.split(':').map(Number);
+  const[eh,em]=S.shiftEnd.split(':').map(Number);
+  const h=now.getHours(),m=now.getMinutes();
+  const tot=(eh*60+em)-(sh*60+sm);
+  const el2=Math.max(0,(h*60+m)-(sh*60+sm));
+  const pct=Math.min(100,Math.round(el2/tot*100));
+  const bar=document.getElementById('sh-prog');if(bar)bar.style.width=pct+'%';
+  const p=proj();
+  if(!p.shiftEnded&&!autoFired&&(h>eh||(h===eh&&m>=em))){autoFired=true;setTimeout(endShift,500);}
+}
+
+// ═══════════════════════════════════════════════
+// COPY ALL
+// ═══════════════════════════════════════════════
+function copyAll(){
+  const p=proj();if(!p.breaks.length)return;
+  const date=new Date().toLocaleDateString('uk-UA',{day:'numeric',month:'long'});
+  let txt=`📋 ${p.name} · ${date}\nВиходів: ${p.breaks.length}\n${'─'.repeat(30)}\n`;
+  p.breaks.forEach((b,i)=>{const info=classify(b.d);txt+=`${i+1}. ${ft(b.s)} → ${ft(b.e)}  ${fd(b.d)}  [${info.label}]\n`;});
+  const tot=p.breaks.reduce((a,b)=>a+b.d,0);txt+=`${'─'.repeat(30)}\nВсього: ${fm(tot)}`;
+  const btn=document.getElementById('copy-btn');
+  try{
+    navigator.clipboard.writeText(txt).then(()=>{btn.textContent='✅ OK';btn.classList.add('ok');setTimeout(()=>{btn.textContent='📋 Копіювати';btn.classList.remove('ok');},1800);});
+  }catch(e){
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;opacity:0;';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    btn.textContent='✅ OK';setTimeout(()=>{btn.textContent='📋 Копіювати';},1800);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// REPORT
+// ═══════════════════════════════════════════════
+function openReport(){
+  const p=proj();
+  document.getElementById('rpt-date').textContent=new Date().toLocaleDateString('uk-UA',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('rpt-count').textContent=p.breaks.length;
+  const tot=p.breaks.reduce((a,b)=>a+b.d,0);
+  document.getElementById('rpt-total').textContent=tot>0?fm(tot):'0 хв';
+  document.getElementById('rpt-avg').textContent=(p.breaks.length?Math.round(tot/p.breaks.length/60000):0)+' хв';
+  let lates=0,fines=0;
+  const el=document.getElementById('rpt-breaks');el.innerHTML='';
+  p.breaks.forEach((b,i)=>{
+    const info=classify(b.d);
+    if(['spill-late','spill-ll'].includes(info.cls))lates++;
+    if(info.cls==='spill-fine')fines++;
+    const c=document.createElement('div');c.className='rpt-row';
+    c.innerHTML=`<span class="rl">Вихід ${i+1} · ${ft(b.s)}–${ft(b.e)}</span><span class="rv" style="color:${info.dot};">${fd(b.d)} <span class="spill ${info.cls}">${info.label}</span></span>`;
+    el.appendChild(c);
+  });
+  document.getElementById('rpt-late').textContent=lates;
+  document.getElementById('rpt-fine').textContent=fines;
+  document.getElementById('report-overlay').classList.add('show');
+}
+
+// ═══════════════════════════════════════════════
+// ADD PROJECT FLOW
+// ═══════════════════════════════════════════════
+function openAddProject(){
+  pendingIndustry=null;
+  buildIndGrid();
+  const btn=document.getElementById('ind-next-btn');
+  btn.style.opacity='.4';btn.style.pointerEvents='none';
+  document.getElementById('proj-overlay').classList.add('show');
+}
+
+function buildIndGrid(){
+  const grid=document.getElementById('ind-grid');grid.innerHTML='';
+  INDUSTRIES.forEach(ind=>{
+    const c=document.createElement('div');c.className='ind-card';
+    c.innerHTML=`<span class="ind-emoji">${ind.emoji}</span><div class="ind-name">${ind.name}</div><div class="ind-desc">${ind.desc}</div>`;
+    c.onclick=()=>{
+      document.querySelectorAll('.ind-card').forEach(x=>x.classList.remove('sel'));
+      c.classList.add('sel');pendingIndustry=ind.id;
+      const btn=document.getElementById('ind-next-btn');btn.style.opacity='1';btn.style.pointerEvents='auto';
+    };
+    grid.appendChild(c);
+  });
+}
+
+function goToMetricPicker(){
+  if(!pendingIndustry)return;
+  const ind=INDUSTRIES.find(i=>i.id===pendingIndustry);
+  document.getElementById('metric-sh-title').textContent=`${ind.emoji} ${ind.name} — метрики`;
+  // Filter metrics for this industry + universal
+  const available=Object.entries(METRICS).filter(([id,m])=>!m.ind||m.ind===pendingIndustry);
+  tmpSelectedMetrics=['breaks','total_break','fines','avg_break','prev_breaks','days_worked','shift_pct'];
+  buildMetricList(available);
+  document.getElementById('proj-overlay').classList.remove('show');
+  document.getElementById('metric-overlay').classList.add('show');
+}
+
+function buildMetricList(available){
+  const list=document.getElementById('metric-list');list.innerHTML='';
+  // Group by group
+  const groups={};
+  available.forEach(([id,m])=>{
+    if(!groups[m.group])groups[m.group]=[];
+    groups[m.group].push({id,...m});
+  });
+  Object.entries(groups).forEach(([grp,items])=>{
+    const lbl=document.createElement('div');
+    lbl.style.cssText='font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);padding:14px 0 4px;';
+    lbl.textContent=grp;list.appendChild(lbl);
+    items.forEach(m=>{
+      const row=document.createElement('div');row.className='mpick-row';
+      const isOn=tmpSelectedMetrics.includes(m.id);
+      row.innerHTML=`<div class="mpick-icon">${m.icon}</div>
+        <div class="mpick-text"><div class="mpick-name">${m.label} ${m.unit?'('+m.unit+')':''}</div><div class="mpick-desc">${m.desc}</div></div>
+        <div class="mpick-check" id="chk-${m.id}">${isOn?'✓':''}</div>`;
+      row.onclick=()=>{
+        const idx=tmpSelectedMetrics.indexOf(m.id);
+        const chk=document.getElementById('chk-'+m.id);
+        if(idx>=0){tmpSelectedMetrics.splice(idx,1);chk.textContent='';}
+        else{if(tmpSelectedMetrics.length>=14){alert('Максимум 14 метрик');return;}tmpSelectedMetrics.push(m.id);chk.textContent='✓';}
+      };
+      list.appendChild(row);
+    });
+  });
+}
+
+function saveProjectMetrics(){
+  const ind=INDUSTRIES.find(i=>i.id===pendingIndustry);
+  const id='proj_'+Date.now();
+  const name=prompt('Назва проекту:',ind.name)||ind.name;
+  S.projects.push({
+    id, name, industryId:pendingIndustry,
+    metrics:[...tmpSelectedMetrics],
+    breaks:[], onBreak:false, breakStart:null, shiftEnded:false, manualValues:{},
+  });
+  S.activeProjectId=id;
+  save();
+  document.getElementById('metric-overlay').classList.remove('show');
+  renderProjects();render();
+}
+
+// ═══════════════════════════════════════════════
+// REORDER
+// ═══════════════════════════════════════════════
+function openReorder(){
+  const p=proj();
+  const list=document.getElementById('drag-list');list.innerHTML='';
+  p.metrics.forEach((id,i)=>{
+    const def=METRICS[id];if(!def)return;
+    const item=document.createElement('div');item.className='drag-item';item.dataset.id=id;
+    item.innerHTML=`<span class="drag-handle">☰</span><span style="font-size:18px;">${def.icon}</span><span style="flex:1;font-size:14px;font-weight:500;">${def.label}</span><span style="font-size:12px;color:var(--text3);">↕</span>`;
+    addDrag(item);
+    list.appendChild(item);
+  });
+  document.getElementById('reorder-overlay').classList.add('show');
+}
+
+function addDrag(el){
+  let startY=0,startIdx=0;
+  el.addEventListener('touchstart',e=>{startY=e.touches[0].clientY;startIdx=Array.from(el.parentNode.children).indexOf(el);e.stopPropagation();},{passive:true});
+  el.addEventListener('touchmove',e=>{
+    e.preventDefault();e.stopPropagation();
+    const dy=e.touches[0].clientY-startY;
+    el.style.transform=`translateY(${dy}px)`;el.classList.add('dragging');
+    const items=Array.from(el.parentNode.children);
+    const cur=items.indexOf(el);
+    if(dy<-40&&cur>0){el.parentNode.insertBefore(el,items[cur-1]);startY=e.touches[0].clientY;}
+    else if(dy>40&&cur<items.length-1){el.parentNode.insertBefore(items[cur+1],el);startY=e.touches[0].clientY;}
+  },{passive:false});
+  el.addEventListener('touchend',()=>{el.style.transform='';el.classList.remove('dragging');});
+}
+
+function saveReorder(){
+  const p=proj();
+  const items=document.getElementById('drag-list').querySelectorAll('.drag-item');
+  p.metrics=Array.from(items).map(i=>i.dataset.id);
+  save();
+  document.getElementById('reorder-overlay').classList.remove('show');
+  renderMetrics(p);
+}
+
+// ═══════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════
+function openSettings(){
+  document.getElementById('set-name').textContent=S.user.name||'Користувач';
+  document.getElementById('set-role').textContent=S.user.role||'Редагувати профіль';
+  document.getElementById('si-start').value=S.shiftStart||'08:00';
+  document.getElementById('si-end').value=S.shiftEnd||'22:00';
+  buildSetProjects();
+  buildThresholds();
+  hide('main');show('settings');
+}
+function closeSettings(){hide('settings');show('main');render();}
+function saveShiftTime(){S.shiftStart=document.getElementById('si-start').value;S.shiftEnd=document.getElementById('si-end').value;save();}
+
+function buildSetProjects(){
+  const c=document.getElementById('set-projects');c.innerHTML='';
+  S.projects.forEach(p=>{
+    const ind=INDUSTRIES.find(i=>i.id===p.industryId)||INDUSTRIES[0];
+    const row=document.createElement('div');row.className='srow';
+    row.innerHTML=`<div class="sri">${ind.emoji}</div><div class="srt"><div class="srt-t">${p.name}</div><div class="srt-s">${p.metrics.length} метрик · ${p.breaks.length} виходів сьогодні</div></div>
+      ${p.id!=='default'?`<button onclick="deleteProject('${p.id}')" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;">✕</button>`:'<span style="color:var(--text3);font-size:12px;">за замовч.</span>'}`;
+    c.appendChild(row);
+  });
+  const addRow=document.createElement('div');addRow.className='srow';
+  addRow.innerHTML=`<div class="sri">➕</div><div class="srt"><div class="srt-t">Додати проект</div><div class="srt-s">Нова галузь та метрики</div></div>`;
+  addRow.onclick=()=>{hide('settings');show('main');openAddProject();};
+  c.appendChild(addRow);
+}
+
+function deleteProject(id){
+  if(!confirm('Видалити проект?'))return;
+  S.projects=S.projects.filter(p=>p.id!==id);
+  if(S.activeProjectId===id)S.activeProjectId=S.projects[0].id;
+  save();buildSetProjects();
+}
+
+function buildThresholds(){
+  const t=S.thresholds;
+  document.getElementById('thresholds-card').innerHTML=`
+    ${trow('ok','Норма','spill-ok',t.ok)}
+    ${trow('late','Затримка','spill-late',t.late)}
+    ${trow('lunch','Обід','spill-lunch',t.lunch)}
+    ${trow('ll','Обід+затримка','spill-ll',t.ll)}
+  `;
+}
+function trow(k,lbl,cls,v){
+  return`<div class="time-row"><span class="time-lbl">${lbl}</span>
+    <span class="spill ${cls}" style="font-size:10px;">${v} хв</span>
+    <div style="display:flex;gap:6px;">
+      <button onclick="adj('${k}',1)" style="background:var(--blue);color:#fff;border:none;border-radius:8px;width:28px;height:28px;font-size:16px;cursor:pointer;font-weight:700;">+</button>
+      <button onclick="adj('${k}',-1)" style="background:var(--card2);color:var(--text);border:none;border-radius:8px;width:28px;height:28px;font-size:16px;cursor:pointer;">−</button>
+    </div>
+  </div>`;
+}
+function adj(k,d){S.thresholds[k]=Math.max(1,S.thresholds[k]+d);save();buildThresholds();}
+
+function setLang(lang,el){
+  S.lang=lang;save();
+  document.querySelectorAll('.lang-pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ═══════════════════════════════════════════════
+// PROFILE
+// ═══════════════════════════════════════════════
+function openProfile(){
+  document.getElementById('prof-name-inp').value=S.user.name||'';
+  document.getElementById('prof-role-inp').value=S.user.role||'';
+  document.getElementById('prof-name-disp').textContent=S.user.name||'—';
+  document.getElementById('prof-role-disp').textContent=S.user.role||'—';
+  document.getElementById('profile-overlay').classList.add('show');
+}
+function saveProfile(){
+  S.user.name=document.getElementById('prof-name-inp').value.trim()||'Користувач';
+  S.user.role=document.getElementById('prof-role-inp').value.trim();
+  save();
+  document.getElementById('set-name').textContent=S.user.name;
+  document.getElementById('set-role').textContent=S.user.role||'Редагувати профіль';
+  document.getElementById('profile-overlay').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════════
+// OVERLAY UTILS
+// ═══════════════════════════════════════════════
+function closeOverlay(id,e){if(!e||e.target===document.getElementById(id))document.getElementById(id).classList.remove('show');}
+
+// ═══════════════════════════════════════════════
+// EXPOSE GLOBALS
+// ═══════════════════════════════════════════════
+window.doLogin=doLogin;window.startBreak=startBreak;window.endBreak=endBreak;window.endShift=endShift;
+window.copyAll=copyAll;window.openReport=openReport;window.openSettings=openSettings;window.closeSettings=closeSettings;
+window.openAddProject=openAddProject;window.goToMetricPicker=goToMetricPicker;window.saveProjectMetrics=saveProjectMetrics;
+window.openReorder=openReorder;window.saveReorder=saveReorder;window.editMetric=editMetric;
+window.openProfile=openProfile;window.saveProfile=saveProfile;window.setLang=setLang;
+window.saveShiftTime=saveShiftTime;window.adj=adj;window.deleteProject=deleteProject;
+window.closeOverlay=closeOverlay;
+</script>
+<script>if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}</script>
+</body>
+</html>

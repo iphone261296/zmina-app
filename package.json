@@ -1,0 +1,12 @@
+{
+  "name": "zmina-app",
+  "version": "1.0.0",
+  "description": "Контроль перерв та метрик зміни",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
